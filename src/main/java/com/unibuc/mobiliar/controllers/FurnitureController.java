@@ -2,18 +2,22 @@ package com.unibuc.mobiliar.controllers;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.util.IOUtils;
 import com.unibuc.mobiliar.entities.Furniture;
-import com.unibuc.mobiliar.repositories.FurnitureRepository;
 import com.unibuc.mobiliar.services.FurnitureService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.*;
 
 @RestController
@@ -45,12 +49,14 @@ public class FurnitureController {
         }
 
         String sanitizedFurnitureName = name.replaceAll("[^a-zA-Z0-9-_]", "_");
-        String folderName = sanitizedFurnitureName + "-" + UUID.randomUUID().toString();
+        String folderName = sanitizedFurnitureName + "-" + UUID.randomUUID();
         String folderUrl = "https://" + cloudFrontDomain + "/models/" + folderName;
 
         String modelName = uploadFileToS3(model, folderName);
-        String modelType = modelName.substring(modelName.lastIndexOf('.') + 1).toLowerCase();
-
+        String modelType = null;
+        if (modelName != null) {
+            modelType = modelName.substring(modelName.lastIndexOf('.') + 1).toLowerCase();
+        }
         String materialName = null;
         if (mtl != null) {
             materialName = uploadFileToS3(mtl, folderName);
@@ -69,6 +75,10 @@ public class FurnitureController {
             }
         }
 
+        if (modelType == null) {
+            throw new IllegalArgumentException("modelType cannot be null");
+        }
+
         Furniture furniture = Furniture.builder()
                 .name(name)
                 .description(description)
@@ -77,6 +87,7 @@ public class FurnitureController {
                 .modelType(modelType)
                 .modelName(modelName)
                 .materialName(materialName)
+                .binName(binName)
                 .textureNames(textureNames)
                 .build();
         furnitureService.saveFurniture(furniture);
@@ -101,6 +112,10 @@ public class FurnitureController {
 
     private String uploadFileToS3(MultipartFile file, String folderName) {
         String fileName = file.getOriginalFilename();
+
+        if (fileName == null) {
+            return null;
+        }
 
         String fileExtension = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
         String contentType = file.getContentType();
@@ -137,5 +152,28 @@ public class FurnitureController {
         ));
 
         return allowedExtensions.contains(fileExtension) && allowedContentTypes.contains(contentType);
+    }
+
+
+    @GetMapping("/{id}/{fileName}")
+        public ResponseEntity<?> getFurnitureFile(@PathVariable Long id, @PathVariable String fileName) {
+        Optional<Furniture> furniture = furnitureService.getFurnitureById(id);
+        if (furniture.isPresent()) {
+            String cloudFrontUrl = furniture.get().getFolderUrl() + "/" + fileName;
+            try {
+                URL url = new URL(cloudFrontUrl);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+
+                InputStream objectData = connection.getInputStream();
+                byte[] bytes = IOUtils.toByteArray(objectData);
+
+                return ResponseEntity.ok().contentType(MediaType.parseMediaType(connection.getContentType())).body(bytes);
+            } catch (IOException e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving file from S3: " + e.getMessage());
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Furniture not found with ID: " + id);
+        }
     }
 }

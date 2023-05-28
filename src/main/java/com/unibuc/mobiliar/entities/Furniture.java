@@ -35,6 +35,8 @@ public class Furniture {
 
     private String materialName;
 
+    private String binName;
+
     @ElementCollection
     private Set<String> textureNames;
 }
