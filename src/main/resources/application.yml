@@ -1,0 +1,24 @@
+aws:
+    access_key_id: AKIA4Y2R6XEI32GL4FHZ
+    secret_access_key: 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
+    region: eu-central-1
+    s3:
+        bucket: madalinfr-mobiliar
+    cloudfront:
+        domain: d3zvnwib1loyt.cloudfront.net
+
+spring:
+    datasource:
+        url: jdbc:postgresql://containers-us-west-81.railway.app:7311/railway
+        username: postgres
+        password: B0xLUGzJcOMiZPypxbn0
+    jpa:
+        hibernate:
+            ddl-auto: update
+        properties:
+            hibernate:
+                dialect: org.hibernate.dialect.PostgreSQLDialect
+    servlet:
+        multipart:
+            max-file-size: 35MB
+            max-request-size: 35MB
