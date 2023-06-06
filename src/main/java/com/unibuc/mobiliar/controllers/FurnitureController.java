@@ -7,6 +7,7 @@ import com.unibuc.mobiliar.entities.Furniture;
 import com.unibuc.mobiliar.services.FurnitureService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/furniture")
@@ -68,7 +70,7 @@ public class FurnitureController {
         }
 
         Set<String> textureNames = new HashSet<>();
-        if (textures != null) {
+        if (textures !=  null) {
             for (MultipartFile texture : textures) {
                 String textureName = uploadFileToS3(texture, folderName);
                 textureNames.add(textureName);
@@ -104,7 +106,9 @@ public class FurnitureController {
     public ResponseEntity<?> getFurnitureById(@PathVariable Long id) {
         Optional<Furniture> furniture = furnitureService.getFurnitureById(id);
         if (furniture.isPresent()) {
-            return ResponseEntity.ok(furniture.get());
+            return ResponseEntity.ok()
+                    .cacheControl(CacheControl.maxAge(7, TimeUnit.DAYS)) // Set Cache-Control header to cache for 7 days
+                    .body(furniture.get());
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Furniture not found with ID: " + id);
         }
