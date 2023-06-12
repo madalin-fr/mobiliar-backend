@@ -20,3 +20,5 @@ spring:
         multipart:
             max-file-size: 35MB
             max-request-size: 35MB
+    config:
+        import: optional:file:.env[.properties]

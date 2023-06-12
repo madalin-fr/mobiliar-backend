@@ -5,6 +5,8 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.util.IOUtils;
 import com.unibuc.mobiliar.entities.Furniture;
 import com.unibuc.mobiliar.services.FurnitureService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.CacheControl;
@@ -38,10 +40,12 @@ public class FurnitureController {
     @Value("${aws.cloudfront.domain}")
     private String cloudFrontDomain;
 
+
+    private static final Logger logger = LogManager.getLogger(FurnitureController.class);
+
     @PostMapping("/add")
     public ResponseEntity<?> addFurniture(@RequestParam("model") MultipartFile model,
                                           @RequestParam(value = "mtl", required = false) MultipartFile mtl,
-                                          @RequestParam(value = "bin", required = false) MultipartFile bin,
                                           @RequestParam(value = "textures", required = false) MultipartFile[] textures,
                                           @RequestParam("name") String name,
                                           @RequestParam("description") String description,
@@ -64,10 +68,6 @@ public class FurnitureController {
             materialName = uploadFileToS3(mtl, folderName);
         }
 
-        String binName = null;
-        if (bin != null) {
-            binName = uploadFileToS3(bin, folderName);
-        }
 
         Set<String> textureNames = new HashSet<>();
         if (textures !=  null) {
@@ -89,9 +89,10 @@ public class FurnitureController {
                 .modelType(modelType)
                 .modelName(modelName)
                 .materialName(materialName)
-                .binName(binName)
                 .textureNames(textureNames)
                 .build();
+
+
         furnitureService.saveFurniture(furniture);
 
         return ResponseEntity.ok().body(furniture);
@@ -146,11 +147,9 @@ public class FurnitureController {
     }
 
     private boolean isFileValid(String fileExtension, String contentType) {
-        Set<String> allowedExtensions = new HashSet<>(Arrays.asList("gltf", "glb", "obj", "mtl", "bin", "png", "jpg", "jpeg"));
+        Set<String> allowedExtensions = new HashSet<>(Arrays.asList("obj", "mtl", "png", "jpg", "jpeg"));
         Set<String> allowedContentTypes = new HashSet<>(Arrays.asList(
-                "model/gltf+json", // GLTF
-                "model/gltf-binary", // GLB
-                "application/octet-stream", // OBJ, MTL, BIN
+                "application/octet-stream", // OBJ, MTL
                 "image/png", // PNG
                 "image/jpeg" // JPG and JPEG
         ));
