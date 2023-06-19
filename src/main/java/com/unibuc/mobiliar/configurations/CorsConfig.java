@@ -13,7 +13,8 @@ public class CorsConfig {
                 registry.addMapping("/**")
 //                        .allowedOrigins("http://localhost:3000") // Replace with your frontend URL
 //                        .allowedOrigins("https://mobiliar-frontend.up.railway.app")
-                        .allowedOrigins("*")
+                        .allowedOrigins("https://mobiliar-frontend.up.railway.app", "http://localhost:3000")
+//                        .allowedOriginPatterns("http://localhost:*", "https://localhost:*")
 //                        .allowedOrigins("https://railway.app")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
