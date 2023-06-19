@@ -19,4 +19,8 @@ public class FurnitureService {
     public void saveFurniture(Furniture furniture) {
         furnitureRepository.save(furniture);
     }
+
+    public void removeFurniture(Furniture furniture) {
+        furnitureRepository.delete(furniture);
+    }
 }
