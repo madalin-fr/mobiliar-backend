@@ -23,7 +23,7 @@ public class FurnitureDTO {
     private String materialName;
     private String binName;
     private String imageName;
-    private Set<String> textureNames;
+    private List<String> textureNames;
 
     // Fields from the Customer entity
     private Long customerId;

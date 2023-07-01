@@ -17,15 +17,12 @@ public class JwtTokenService {
             e.printStackTrace();
             throw e; // rethrow the exception if necessary
         }
-
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .subject(email)
                 .expirationTime(new Date(System.currentTimeMillis() + TOKEN_EXPIRATION_TIME_MS))
                 .build();
-
         SignedJWT signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claimsSet);
         signedJWT.sign(signer);
-
         return signedJWT.serialize();
     }
     private boolean isTokenExpired(SignedJWT signedJWT) throws ParseException {

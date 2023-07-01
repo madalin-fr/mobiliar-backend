@@ -27,11 +27,8 @@ public class Customer {
     @NonNull
     private String phoneNumber;
     private boolean activatedAccount = false;
-
-
     @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL)
     @JsonManagedReference
+    @ToString.Exclude
     private List<Furniture> furnitures;
-
-
 }

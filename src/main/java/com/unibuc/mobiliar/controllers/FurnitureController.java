@@ -3,6 +3,7 @@ package com.unibuc.mobiliar.controllers;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.util.IOUtils;
 import com.unibuc.mobiliar.dto.FurnitureDTO;
+import com.unibuc.mobiliar.dto.FurnitureUpdateDTO;
 import com.unibuc.mobiliar.entities.Customer;
 import com.unibuc.mobiliar.entities.Furniture;
 import com.unibuc.mobiliar.services.AWSService;
@@ -67,7 +68,7 @@ public class FurnitureController {
         if (mtl != null) {
             materialName = awsService.uploadFileToS3(mtl, folderName);
         }
-        Set<String> textureNames = new HashSet<>();
+        List<String> textureNames = new ArrayList<>();
         if (textures !=  null) {
             for (MultipartFile texture : textures) {
                 String textureName = awsService.uploadFileToS3(texture, folderName);
@@ -113,7 +114,7 @@ public class FurnitureController {
         Optional<Furniture> furniture = furnitureService.getFurnitureById(id);
         if (furniture.isPresent()) {
             Furniture furnitureItem = furniture.get();
-            Customer customer = furnitureItem.getSeller();
+                Customer customer = furnitureItem.getSeller();
             FurnitureDTO furnitureDTO = new FurnitureDTO(
                     furnitureItem.getId(),
                     furnitureItem.getName(),
@@ -145,38 +146,43 @@ public class FurnitureController {
     }
 
     @GetMapping
-    public ResponseEntity<List<FurnitureDTO>> getAllFurniture() {
-        logger.info("Fetching all furniture");
-        List<Furniture> allFurniture = furnitureService.getAllFurniture();
-        List<FurnitureDTO> allFurnitureDto = allFurniture.stream()
-                .map(furniture -> {
-                    Customer customer = furniture.getSeller();
-                    return new FurnitureDTO(
-                            furniture.getId(),
-                            furniture.getName(),
-                            furniture.getDescription(),
-                            furniture.getCreatedAt(),
-                            furniture.getPrice(),
-                            furniture.getFolderUrl(),
-                            furniture.getModelType(),
-                            furniture.getModelName(),
-                            furniture.getMaterialName(),
-                            furniture.getBinName(),
-                            furniture.getImageName(),
-                            furniture.getTextureNames(),
-                            customer.getId(),
-                            customer.getName(),
-                            customer.getEmail(),
-                            customer.getPassword(),
-                            customer.getAddress1(),
-                            customer.getAddress2(),
-                            customer.getPhoneNumber(),
-                            customer.isActivatedAccount()
-                    );
-                })
-                .collect(Collectors.toList());
-        logger.info("Returning {} furniture items", allFurniture.size());
-        return ResponseEntity.ok(allFurnitureDto);
+    public ResponseEntity<?> getAllFurniture() {
+        try {
+            logger.info("Fetching all furniture");
+            List<Furniture> allFurniture = furnitureService.getAllFurniture();
+            List<FurnitureDTO> allFurnitureDto = allFurniture.stream()
+                    .map(furniture -> {
+                        Customer customer = furniture.getSeller();
+                        return new FurnitureDTO(
+                                furniture.getId(),
+                                furniture.getName(),
+                                furniture.getDescription(),
+                                furniture.getCreatedAt(),
+                                furniture.getPrice(),
+                                furniture.getFolderUrl(),
+                                furniture.getModelType(),
+                                furniture.getModelName(),
+                                furniture.getMaterialName(),
+                                furniture.getBinName(),
+                                furniture.getImageName(),
+                                furniture.getTextureNames(),
+                                customer.getId(),
+                                customer.getName(),
+                                customer.getEmail(),
+                                customer.getPassword(),
+                                customer.getAddress1(),
+                                customer.getAddress2(),
+                                customer.getPhoneNumber(),
+                                customer.isActivatedAccount()
+                        );
+                    })
+                    .collect(Collectors.toList());
+            logger.info("Returning {} furniture items", allFurniture.size());
+            return ResponseEntity.ok(allFurnitureDto);
+        } catch (Exception e) {
+        logger.error("Error fetching all furniture", e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error fetching all furniture" + e.getMessage());
+        }
     }
 
     @GetMapping("/{id}/{fileName}")
@@ -196,6 +202,38 @@ public class FurnitureController {
             } catch (IOException e) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving file from S3: " + e.getMessage());
             }
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Furniture not found with ID: " + id);
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> editFurniture(@PathVariable Long id,
+                                           @RequestBody FurnitureUpdateDTO updateDTO,
+                                           @RequestParam("customerEmail") String customerEmail) {
+        logger.info("Updating furniture with id: {}", id);
+        Optional<Furniture> furnitureOptional = furnitureService.getFurnitureById(id);
+
+        if (furnitureOptional.isPresent()) {
+            Furniture furniture = furnitureOptional.get();
+
+            if (!furniture.getSeller().getEmail().equals(customerEmail)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You are not the owner of this furniture item");
+            }
+
+            if (updateDTO.getName() != null) {
+                furniture.setName(updateDTO.getName());
+            }
+            if (updateDTO.getDescription() != null) {
+                furniture.setDescription(updateDTO.getDescription());
+            }
+            if (updateDTO.getPrice() != null) {
+                furniture.setPrice(updateDTO.getPrice());
+            }
+
+            furnitureService.saveFurniture(furniture);
+            logger.info("Furniture updated successfully");
+            return ResponseEntity.ok().body("Furniture updated successfully");
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Furniture not found with ID: " + id);
         }

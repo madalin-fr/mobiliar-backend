@@ -8,19 +8,23 @@ import java.util.Optional;
 public class FurnitureService {
     private final FurnitureRepository furnitureRepository;
     public FurnitureService(FurnitureRepository furnitureRepository) {
+
         this.furnitureRepository = furnitureRepository;
     }
     public List<Furniture> getAllFurniture() {
+
         return furnitureRepository.findAll();
     }
     public Optional<Furniture> getFurnitureById(Long id) {
+
         return furnitureRepository.findById(id);
     }
     public void saveFurniture(Furniture furniture) {
+
         furnitureRepository.save(furniture);
     }
-
     public void removeFurniture(Furniture furniture) {
+
         furnitureRepository.delete(furniture);
     }
 }

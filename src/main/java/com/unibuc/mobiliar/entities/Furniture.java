@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 @Entity
 @Data
@@ -32,10 +33,11 @@ public class Furniture {
     private String binName;
         private String imageName;
     @ElementCollection
-    private Set<String> textureNames;
+    private List<String> textureNames;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
     @JsonBackReference
+    @ToString.Exclude
     private Customer seller;
 }

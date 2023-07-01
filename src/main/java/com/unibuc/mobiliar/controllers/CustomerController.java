@@ -51,6 +51,20 @@ public class CustomerController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/get-name-by-email")
+    public ResponseEntity<?> getNameByEmail(@RequestParam("email") String email) {
+        if (email.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email cannot be empty");
+        }
+        String name = customerService.getNameByEmail(email);
+        if (name != null) {
+            return ResponseEntity.ok(name);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Customer not found");
+        }
+    }
+
+
     @PostMapping("/is-account-activated")
     public ResponseEntity<?> isAccountActivated(@RequestParam String email) {
         Optional<Customer> customer = customerService.findCustomerByEmail(email);
@@ -87,7 +101,7 @@ public class CustomerController {
         customerService.saveCustomer(customer);
         logger.info("Customer registered successfully with id: {}", customer.getId());
         return ResponseEntity.ok().body(customer);
-    }
+    }   
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) throws JOSEException {
         String email = loginRequest.getEmail();

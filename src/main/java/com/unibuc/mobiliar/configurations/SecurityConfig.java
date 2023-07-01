@@ -17,7 +17,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow OPTIONS requests for all routes
                 .antMatchers(HttpMethod.POST, "/**").permitAll() // Allow POST requests for all routes
                 .antMatchers(HttpMethod.GET, "/**").permitAll()
-                // Your other rules and configurations go here
+                .antMatchers(HttpMethod.PUT, "/**").permitAll()
+                .antMatchers(HttpMethod.DELETE, "/**").permitAll()
                 .anyRequest().authenticated();
     }
 

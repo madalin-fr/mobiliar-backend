@@ -8,19 +8,19 @@ import java.util.Optional;
 public class CustomerService {
     private final CustomerRepository customerRepository;
     private final BCryptPasswordEncoder passwordEncoder;
-
-    public CustomerService(CustomerRepository customerRepository, BCryptPasswordEncoder passwordEncoder) {
+    public CustomerService(CustomerRepository customerRepository,
+                           BCryptPasswordEncoder passwordEncoder) {
         this.customerRepository = customerRepository;
         this.passwordEncoder = passwordEncoder;
     }
     public Optional<Customer> findCustomerByEmail(String email) {
+
         return customerRepository.findByEmail(email);
     }
     public void saveCustomer(Customer customer) {
+
         customerRepository.save(customer);
     }
-
-    //
     public boolean activateCustomer(Customer customer) {
         try {
             customer.setActivatedAccount(true);
@@ -34,10 +34,17 @@ public class CustomerService {
     public boolean checkEmailExists(String email) {
         return customerRepository.existsByEmail(email);
     }
+    public String getNameByEmail(String email) {
+        Optional<Customer> customer = findCustomerByEmail(email);
+        if (customer.isPresent()) {
+            return customer.get().getName();
+        }
+        return null;
+    }
     public boolean checkPhoneExists(String phoneNumber) {
+
         return customerRepository.existsByPhoneNumber(phoneNumber);
     }
-
     public Optional<Customer> authenticate(String email, String password) {
         Optional<Customer> customer = findCustomerByEmail(email);
         if (customer.isPresent() && passwordEncoder.matches(password, customer.get().getPassword())) {
@@ -46,7 +53,6 @@ public class CustomerService {
             return Optional.empty();
         }
     }
-
     public boolean updatePassword(Customer customer, String newPassword) {
         try {
             customer.setPassword(passwordEncoder.encode(newPassword));

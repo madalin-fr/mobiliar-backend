@@ -11,11 +11,9 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-//                        .allowedOrigins("http://localhost:3000") // Replace with your frontend URL
-//                        .allowedOrigins("https://mobiliar-frontend.up.railway.app")
-                        .allowedOrigins("https://mobiliar-frontend.up.railway.app", "http://localhost:3000")
-//                        .allowedOriginPatterns("http://localhost:*", "https://localhost:*")
-//                        .allowedOrigins("https://railway.app")
+                        .allowedOrigins(
+                                "https://mobiliar-frontend.up.railway.app",
+                                "http://localhost:3000")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
